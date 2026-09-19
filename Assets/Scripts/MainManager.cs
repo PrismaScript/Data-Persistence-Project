@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
+using TMPro;
 
 public class MainManager : MonoBehaviour
 {
@@ -11,21 +13,29 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text playerNameTex;
+    public TMP_Text topScoreText;
     public GameObject GameOverText;
-    
+
     private bool m_Started = false;
     private int m_Points;
-    
+
     private bool m_GameOver = false;
 
-    
+
     // Start is called before the first frame update
     void Start()
     {
+        string ruta = Application.persistentDataPath + "/datosJugador.json";
+        string json = File.ReadAllText(ruta);
+        DatosJugador datos = JsonUtility.FromJson<DatosJugador>(json);
+        playerNameTex.text = datos.nombreJugador;
+        topScoreText.text = "Top Score: " + datos.nombreTopScore + " : " + datos.puntuacionTopScore;
+
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
-        int[] pointCountArray = new [] {1,1,2,2,5,5};
+
+        int[] pointCountArray = new[] { 1, 1, 2, 2, 5, 5 };
         for (int i = 0; i < LineCount; ++i)
         {
             for (int x = 0; x < perLine; ++x)
@@ -72,5 +82,23 @@ public class MainManager : MonoBehaviour
     {
         m_GameOver = true;
         GameOverText.SetActive(true);
+
+        string ruta = Application.persistentDataPath + "/datosJugador.json";
+
+        string jsonCargado = File.ReadAllText(ruta);
+
+        DatosJugador datos = JsonUtility.FromJson<DatosJugador>(jsonCargado);
+
+        if (m_Points > datos.puntuacionTopScore)
+        {
+            datos.puntuacionTopScore = m_Points;
+            datos.nombreTopScore = datos.nombreJugador;
+
+            string json = JsonUtility.ToJson(datos);
+
+            File.WriteAllText(ruta, json);
+
+            Debug.Log("¡Nuevo Top Score!: " + datos.nombreTopScore + datos.puntuacionTopScore);
+        }
     }
 }
